@@ -1,0 +1,102 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Memory Garden</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120d1c;--panel:#1b1430;--line:#34294f;--ink:#efe7ff;--mute:#9d90bd;--pollen:#ffc857;--petal:#ff8fa3;--wilt:#c4573f;--lock:#8c7bff;color-scheme:dark}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:radial-gradient(1200px 700px at 30% 40%,#251a40,var(--bg));color:var(--ink);font:15px/1.5 "Instrument Sans",system-ui,sans-serif;display:grid;grid-template-columns:1fr 400px}
+main{position:relative;min-height:100vh}canvas{position:absolute;inset:0;width:100%;height:100%}
+h1{position:absolute;left:36px;top:28px;margin:0;font:600 44px/1 Fraunces,serif;letter-spacing:-.02em;pointer-events:none}
+.lede{position:absolute;left:38px;top:84px;max-width:340px;color:var(--mute);margin:0;pointer-events:none}
+.legend{position:absolute;left:38px;bottom:28px;display:flex;gap:18px;flex-wrap:wrap;color:var(--mute);font-size:13px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+aside{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;height:100vh}
+#chat{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:14px}
+.u{align-self:flex-end;background:#2c2150;padding:10px 14px;border-radius:16px 16px 4px 16px;max-width:85%}
+.a{font-family:Fraunces,serif;font-size:17px;line-height:1.55;white-space:pre-wrap}
+.empty{color:var(--mute)}.empty b{display:block;color:var(--ink);font:600 20px Fraunces,serif;margin-bottom:6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.stats div{background:var(--panel);padding:12px 16px}.stats b{display:block;font:600 22px Fraunces,serif;color:var(--pollen)}.stats span{color:var(--mute);font-size:12px}
+form{padding:16px 24px 20px;border-top:1px solid var(--line)}
+.row{display:flex;gap:10px}input[type=text]{flex:1;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:12px 14px;border-radius:12px;font:inherit}
+input:focus-visible,button:focus-visible{outline:2px solid var(--pollen);outline-offset:2px}
+button{background:var(--pollen);color:#2a1d00;border:0;border-radius:12px;padding:0 18px;font:600 15px inherit;cursor:pointer}button:disabled{opacity:.5}
+label{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;margin-top:12px}input[type=range]{width:100%;accent-color:var(--pollen)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.chips button{background:transparent;color:var(--mute);border:1px solid var(--line);padding:5px 11px;font-weight:500;font-size:13px}
+#tip{position:fixed;pointer-events:none;background:#241a3d;border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:270px;font-size:13px;opacity:0;transition:opacity .12s}
+#tip p{margin:0 0 8px;font:500 15px Fraunces,serif}.bar{display:grid;grid-template-columns:78px 1fr 34px;gap:8px;align-items:center;color:var(--mute)}
+.bar s{height:5px;background:var(--line);border-radius:3px;overflow:hidden;text-decoration:none}.bar s u{display:block;height:100%;background:var(--petal)}
+@media(max-width:900px){body{grid-template-columns:1fr;grid-template-rows:60vh auto}aside{height:auto;min-height:60vh}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.pipe{position:absolute;right:28px;top:30px;display:flex;gap:6px;list-style:none;margin:0;padding:0}
+.pipe li{padding:6px 14px;border:1px solid var(--line);border-radius:99px;color:var(--mute);font-size:13px;transition:all .25s}
+.pipe li.on{color:#2a1d00;background:var(--pollen);border-color:var(--pollen)}.pipe li.done{color:var(--ink);border-color:var(--pollen)}
+.tabs{display:flex;border-bottom:1px solid var(--line)}.tabs button{flex:1;background:transparent;color:var(--mute);border-radius:0;padding:14px;font-weight:500;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--pollen)}
+[hidden]{display:none!important}#led{flex:1;overflow:auto;padding:16px 24px}
+.li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.li i{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none}
+.li b{display:block;font:500 15px Fraunces,serif}.li span{color:var(--mute);font-size:12px}
+.save{padding:14px 24px;border-top:1px solid var(--line)}.save div{height:8px;background:var(--line);border-radius:5px;overflow:hidden}
+.save u{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--pollen),var(--petal));transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.save span{display:block;margin-top:6px;color:var(--mute);font-size:12px}
+</style></head><body>
+<main><canvas id="c"></canvas><h1>Memory Garden</h1>
+<p class="lede">The agent remembers everything. A 2B decision model picks the few memories that deserve to bloom into the answer.</p>
+<div class="legend"><span><i style="background:#ffc857"></i>used</span><span><i style="background:#c4573f"></i>outdated</span><span><i style="background:#8c7bff"></i>private</span><span><i style="background:#6b5b95"></i>not needed</span></div>
+<ol class="pipe" id="pipe"><li>Scan</li><li>Judge</li><li>Bloom</li><li>Answer</li></ol><div id="tip"></div></main>
+<aside><nav class="tabs"><button class="on" data-t="chat">Chat</button><button data-t="led">Decisions</button></nav><div id="led" hidden></div><div id="chat"><div class="empty"><b>Ask anything.</b>Watch each memory get judged in about 100 ms, then see what reaches the model.</div></div>
+<div class="stats"><div><b id="s1">–</b><span>gate time</span></div><div><b id="s2">–</b><span>memories used</span></div><div><b id="s3">–</b><span>tokens saved</span></div></div>
+<div class="save"><div><u id="sv"></u></div><span id="svt">Tokens sent to the model</span></div><form id="f"><div class="row"><input type="text" id="q" placeholder="Plan my weekend food…" autocomplete="off" required><button id="go">Ask</button></div>
+<div class="chips"><button type="button">Suggest dinner tonight</button><button type="button">Where should I hike?</button><button type="button">Help me budget this month</button></div>
+<label>Relevance bar <span id="tv">0.50</span></label><input type="range" id="th" min="0.2" max="0.9" step="0.05" value="0.5"></form></aside>
+<script>
+const C=document.getElementById("c"),X=C.getContext("2d"),tip=document.getElementById("tip");
+const COL={idle:"#6b5b95",injected:"#ffc857",pruned:"#c4573f",withheld:"#8c7bff",skipped:"#4a3d70"};
+let M=[],N=[],scan=0,T=0,CX=0,CY=0,wave=-1;
+async function init(){M=await (await fetch("/api/memories")).json();N=M.map((m,i)=>({m,i,s:"idle",p:null,k:0,r:9}));layout();requestAnimationFrame(draw)}
+function layout(){const w=C.width=C.clientWidth*devicePixelRatio,h=C.height=C.clientHeight*devicePixelRatio;X.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+ const W=C.clientWidth,H=C.clientHeight,cx=W*.55,cy=H*.54,R=Math.min(W,H)*.43;
+ CX=cx;CY=cy;N.forEach(n=>{const a=n.i*2.39996,d=Math.sqrt((n.i+.8)/N.length)*R;n.x=cx+Math.cos(a)*d;n.y=cy+Math.sin(a)*d*.88})}
+addEventListener("resize",layout);
+function draw(t){T=t/1000;const W=C.clientWidth,H=C.clientHeight;X.clearRect(0,0,W,H);
+ if(wave>=0){wave+=7;X.strokeStyle="#ffc85766";X.lineWidth=1.5;X.beginPath();X.arc(CX,CY,wave,0,7);X.stroke();if(wave>Math.max(W,H))wave=-1}
+ X.lineWidth=1.2;N.forEach(n=>{if(n.s==="injected"){X.strokeStyle="#ffc85766";X.setLineDash([4,8]);X.lineDashOffset=-T*30;X.beginPath();X.moveTo(CX,CY);X.quadraticCurveTo((CX+n.x)/2+20,(CY+n.y)/2-30,n.x,n.y);X.stroke()}});X.setLineDash([]);
+ X.fillStyle="#ffc857";X.beginPath();X.arc(CX,CY,5+Math.sin(T*3)*1.5,0,7);X.fill();
+ N.forEach(n=>{n.k+=((n.s==="idle"?0:1)-n.k)*.08;const c=COL[n.s],br=Math.sin(T*1.4+n.i)*.5+.5;
+  const base=n.s==="injected"?15:n.s==="pruned"?8:n.s==="withheld"?11:n.s==="skipped"?6:9;n.r+=(base-n.r)*.1;
+  const g=X.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*(n.s==="injected"?4:2.4));
+  g.addColorStop(0,c+(n.s==="injected"?"cc":"66"));g.addColorStop(1,c+"00");X.fillStyle=g;X.beginPath();X.arc(n.x,n.y,n.r*(n.s==="injected"?4:2.4),0,7);X.fill();
+  if(n.s==="injected"||n.s==="idle"){for(let k=0;k<6;k++){const a=k*Math.PI/3+T*.15;X.fillStyle=c+(n.s==="idle"?"55":"aa");X.beginPath();X.ellipse(n.x+Math.cos(a)*n.r*.9,n.y+Math.sin(a)*n.r*.9,n.r*.55+br,n.r*.28,a,0,7);X.fill()}}
+  X.fillStyle=n.s==="pruned"?"#7a3a2c":c;X.beginPath();X.arc(n.x,n.y,n.r*.45,0,7);X.fill();
+  if(n.s==="withheld"){X.strokeStyle=c;X.lineWidth=2;X.beginPath();X.arc(n.x,n.y,n.r*.9,0,7);X.stroke()}
+  if(n.s==="pruned"){X.strokeStyle=c;X.lineWidth=2;X.beginPath();X.moveTo(n.x-n.r*.6,n.y-n.r*.6);X.lineTo(n.x+n.r*.6,n.y+n.r*.6);X.moveTo(n.x+n.r*.6,n.y-n.r*.6);X.lineTo(n.x-n.r*.6,n.y+n.r*.6);X.stroke()}
+  if(scan&&n.s==="idle"){X.strokeStyle="#ffffff"+Math.floor((Math.sin(T*6+n.i)*.5+.5)*60+20).toString(16);X.beginPath();X.arc(n.x,n.y,n.r+5,0,7);X.stroke()}});
+ requestAnimationFrame(draw)}
+C.onmousemove=e=>{const b=C.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;const n=N.find(n=>Math.hypot(n.x-x,n.y-y)<n.r+8);
+ if(!n){tip.style.opacity=0;return}
+ const bars=n.p?Object.entries(n.p).map(([k,v])=>`<div class="bar"><span>${k}</span><s><u style="width:${v*100}%"></u></s><span>${v.toFixed(2)}</span></div>`).join(""):"";
+ tip.innerHTML=`<p>${n.m.text}</p><div style="color:var(--mute);margin-bottom:8px">${n.m.age} days old${n.s!=="idle"?" · "+n.s+" · "+n.ms+" ms":""}</div>${bars}`;
+ tip.style.left=Math.min(e.clientX+16,innerWidth-290)+"px";tip.style.top=Math.min(e.clientY+16,innerHeight-220)+"px";tip.style.opacity=1};
+const chat=document.getElementById("chat"),q=document.getElementById("q");
+th.oninput=()=>{tv.textContent=(+th.value).toFixed(2);N.forEach(n=>{if(n.p)n.s=verdict(n.p,+th.value)});renderLedger()};
+document.querySelectorAll(".chips button").forEach(b=>b.onclick=()=>{q.value=b.textContent;f.requestSubmit()});
+f.onsubmit=async e=>{e.preventDefault();const text=q.value;q.value="";go.disabled=true;chat.querySelector(".empty")?.remove();
+ chat.insertAdjacentHTML("beforeend",`<div class="u"></div><div class="a"></div>`);chat.lastChild.previousSibling.textContent=text;const out=chat.lastChild;
+ N.forEach(n=>{n.s="idle";n.p=null});scan=1;step(0);wave=0;renderLedger();["s1","s2","s3"].forEach(i=>document.getElementById(i).textContent="…");
+ const r=await fetch("/api/ask",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({query:text,threshold:+th.value})});
+ const rd=r.body.getReader(),dec=new TextDecoder();let buf="";
+ while(true){const {done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+  while((i=buf.indexOf("\n\n"))>=0){const raw=buf.slice(0,i);buf=buf.slice(i+2);const ev=raw.match(/event: (\w+)/)[1],d=JSON.parse(raw.match(/data: (.*)/)[1]);
+   if(ev==="chunk"){step(1);const n=N[d.id];n.s=d.v;n.p=d.p;n.ms=d.ms}
+   if(ev==="stats"){scan=0;step(2);renderLedger();sv.style.width=(100*d.tokens_kept/d.tokens_all)+"%";svt.textContent=d.tokens_kept+" of "+d.tokens_all+" memory tokens sent to the model";s1.textContent=d.gate_ms+" ms";s2.textContent=d.kept+" / "+d.total;s3.textContent=Math.round(100*(1-d.tokens_kept/d.tokens_all))+"%"}
+   if(ev==="token"){step(3);out.textContent+=d.t;chat.scrollTop=1e9}
+   if(ev==="error")out.textContent+="\n"+d.msg}}
+ scan=0;step(4);go.disabled=false};
+const P=document.getElementById("pipe");
+function step(i){[...P.children].forEach((c,k)=>c.className=k<i?"done":k===i?"on":"")}
+function verdict(p,t){if(p.private>.6&&p.relevant<.8)return"withheld";if(p.superseded>.6||p.stale>.75)return"pruned";return p.relevant>=t?"injected":"skipped"}
+function renderLedger(){led.innerHTML=N.filter(n=>n.p).sort((a,b)=>b.p.relevant-a.p.relevant).map(n=>`<div class="li"><i style="background:${COL[n.s]}"></i><div><b>${n.m.text}</b><span>${n.s} · relevance ${n.p.relevant.toFixed(2)} · ${n.ms} ms</span></div></div>`).join("")||'<p class="empty">Ask something to see every decision.</p>'}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));chat.hidden=b.dataset.t!=="chat";led.hidden=b.dataset.t!=="led"});
+renderLedger();step(-1);
+init();
+</script></body></html>
